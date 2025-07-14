@@ -1,0 +1,14 @@
+
+####now to apply our calibration factor to our raster layer##########  v   
+s_sd<- rast("spatial_sd.tif")
+
+cal_s_sd<- s_sd*a+b
+
+writeRaster(cal_s_sd, file= "cal_spatial_sd.tif")
+
+uncal_mean<- global(s_sd, fun= "mean", na.rm= TRUE)
+cal_mean<- global(cal_s_sd, fun = "mean", na.rm=TRUE)
+
+print(uncal_mean)
+print(cal_mean)
+
