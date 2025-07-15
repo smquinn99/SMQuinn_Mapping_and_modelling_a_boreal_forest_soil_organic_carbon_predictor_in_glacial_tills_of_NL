@@ -1,32 +1,32 @@
 library(dplyr)
-#rf_nonspatial_alldata<- randomForest(Al_avail~ ruggedness + bedrockgeo + unit_size + NLDEM + climate_zones_RS + distOcean_RS + slope+ surficial_regional_RS, till_df, ntree=1000, mtry=4)
 
-p3<-predict(rfspatial, till_df, predict.all=TRUE) 
-p3mean<- apply(p3$individual, MARGIN=1, mean, na.rm= TRUE)
-p3sd<- apply(p3$individual, MARGIN=1, sd, na.rm= TRUE)
+#make predictions over the whole dataframe
+p4<-predict(rfspatial, till_df, predict.all=TRUE) 
+p4mean<- apply(p4$individual, MARGIN=1, mean, na.rm= TRUE)
+p4sd<- apply(p4$individual, MARGIN=1, sd, na.rm= TRUE)
 
-ind3<-data.frame(observed=till_df$Al_avail, predicted=p3, mean=p3mean, sd=p3sd)
-ind3$error<- (ind3$observed- ind3$predicted.aggregate)
+ind4<-data.frame(observed=till_df$Al_avail, predicted=p4, mean=p4mean, sd=p4sd)
+ind4$error<- (ind4$observed- ind4$predicted.aggregate)
 
 #add my calibrated values
-ind3<- ind3 %>% mutate(cal = (sd*a+b))
+ind4<- ind4 %>% mutate(cal = (sd*a+b))
 
 #r value plot 
 #first make the r statistic (r = residual/sd) 
-ind3<- ind3 %>% mutate(rC = error/cal)
-rC<- ind3$rC
-ind3<- ind3 %>% mutate(rUC = error/sd)
-rUC<-ind3$rUC
+ind4<- ind4 %>% mutate(rC = error/cal)
+rC<- ind4$rC
+ind4<- ind4 %>% mutate(rUC = error/sd)
+rUC<-ind4$rUC
 
 #calculate the mean and standard deviations
-mean_Rstat_C<- mean(ind3$rC)
-sd_Rstat_C<-sd(ind3$rC)
+mean_Rstat_C<- mean(ind4$rC)
+sd_Rstat_C<-sd(ind4$rC)
 
-mean_Rstat_UC<- mean(ind3$rUC)
-sd_Rstat_UC<-sd(ind3$rUC)
+mean_Rstat_UC<- mean(ind4$rUC)
+sd_Rstat_UC<-sd(ind4$rUC)
 
-uncal_RMSE<- RMSE(ind3$error, ind3$sd)
-Cal_RMSE<-RMSE(ind3$error, ind3$cal)
+uncal_RMSE<- RMSE(ind4$error, ind4$sd)
+Cal_RMSE<-RMSE(ind4$error, ind4$cal)
 #Now plot
 
 png( filename = "D:/GIS_SCOUT/GIS_SCOUT/figures/cal_asp_hist.png", width = 3.25, height = 3, units = "in", res = 200)
@@ -53,61 +53,86 @@ RMSE = function(observed_data, predicted_data){
   sqrt(mean((observed_data - predicted_data)^2))
 }
 
-#binning
-
-ind3<- ind3 %>% 
+#binning the uncalibrated values
+ind4<- ind4 %>% 
   ungroup() %>%
-  mutate(sd_bin = cut_number(ind3$sd, n = 30))
+  mutate(sd_bin = cut_number(ind4$sd, n = 15))
 #Obtain RMSE of the bin for uncalibrated values
-Stats4 <- ind3 %>% group_by(sd_bin) %>% 
+Stats6 <- ind4 %>% group_by(sd_bin) %>% 
   summarize(mean_sd_group = mean(sd), RMS_group_UC = RMSE(observed, predicted.aggregate), NumFramesUC = n())
 
 # do the same thing for the calibrated values
-ind3<- ind3 %>% 
+ind4<- ind4 %>% 
   ungroup() %>%
-  mutate(sdcal_bin = cut_number(ind3$cal, n = 30))
+  mutate(sdcal_bin = cut_number(ind4$cal, n = 15))
 #now obtain the RMSE of calibrated bins
-Stats5 <- ind3 %>% group_by(sdcal_bin) %>% 
+Stats7 <- ind4 %>% group_by(sdcal_bin) %>% 
   summarize(mean_sd_group = mean(sd), mean_sdcal_group = mean(cal), RMS_group = RMSE(observed, predicted.aggregate), NumFramesC = n())
 
-#Identify bins with few values in them
-lowcountsC<- subset(Stats5, NumFramesC<30)
-adequate_countsC<- subset(Stats5, NumFramesC>30)
 
-lowcountsUC<- subset(Stats4, NumFramesUC<30)
-adequate_countsUC<- subset(Stats4, NumFramesUC>30)
+#Identify bins with few values in them
+lowcountsC<- subset(Stats7, NumFramesC<30)
+adequate_countsC<- subset(Stats7, NumFramesC>30)
+
+lowcountsUC<- subset(Stats6, NumFramesUC<30)
+adequate_countsUC<- subset(Stats6, NumFramesUC>30)
+
+
+#Visualize large cloud of datapoints
+ind4<- ind4 %>% 
+  ungroup() %>%
+  mutate(sd_bin = cut_number(sd, 5000))
+#Obtain RMSE of the bin for uncalibrated values
+stats8 <- ind4 %>% group_by(sd_bin) %>% 
+  summarize(mean_sd_group = mean(sd), RMS_group_UC = RMSE(observed, predicted.aggregate), NumFramesUC = n())
+
+# do the same thing for the calibrated values
+ind4<- ind4 %>% 
+  ungroup() %>%
+  mutate(sdcal_bin = cut_number(cal, 5000))
+#now obtain the RMSE of calibrated bins
+stats9 <- ind4 %>% group_by(sdcal_bin) %>% 
+  summarize(mean_sd_group = mean(sd), mean_sdcal_group = mean(cal), RMS_group = RMSE(observed, predicted.aggregate), NumFramesC = n())
+
+
 
 #now make a plot (RMSE residuals vs standard deviation of the bootstrapped estimates)
-png( filename = "D:/GIS_SCOUT/GIS_SCOUT/figures/cal_sp_scattercode_equalsize.png", width = 3.25, height = 2.5, units = "in", res = 200)
+png( filename = "D:/GIS_SCOUT/GIS_SCOUT/figures/cal_as_scattercode_equalsize.png", width = 3.25, height = 2.5, units = "in", res = 200)
 par(mar= c(3, 3, 0, 1))
-plot(adequate_countsC$mean_sdcal_group, adequate_countsC$RMS_group, 
+plot(stats9$mean_sdcal_group, stats9$RMS_group, 
      cex.lab=0.7, cex.axis=0.6, cex.main= 0.2,
      xlab = "", 
      ylab = "",
      abline(a=0, b=1, col= "red"),
-     pch = 21, bg = "blue", col = "blue",
+     pch = 16, col =rgb(0.6, 0.6, 1, 0.3), cex = 0.5,
      xlim=c(0, 0.6),
      ylim=c(0, .6))
-points( adequate_countsUC$mean_sd_group, adequate_countsUC$RMS_group_UC,pch = 21, bg = "grey", col = "grey" )
-points( lowcountsC$mean_sdcal_group, lowcountsC$RMS_group, col="blue")
-points( lowcountsUC$mean_sd_group, lowcountsUC$RMS_group_UC, col="grey")
-title(xlab= "Mean Binned SD", ylab = "RMS Residuals", line = 2, cex.lab = "0.7")
-legend("bottomright", c("Uncalibrated", "Calibrated", "Low Counts", "Identity Function"), cex = 0.7, 
-       pch = c(16, 16, 1, NA), lty = c(NA, NA, NA, 1), col =c("grey", "blue", "black", "red"))
-dev.off()
+points(stats8$mean_sd_group, stats8$RMS_group_UC,pch = 19, bg = rgb(0.8, 0.8, 0.8), col = rgb(0.8, 0.8, 0.8, 0.3), cex = 0.5)
 
+#add all points to the scatterplot
+abline(a=0, b=1, col= "red")
+points(adequate_countsC$mean_sdcal_group, adequate_countsC$RMS_group,pch = 21, bg = "blue", col = "blue", cex = 0.5)
+points( adequate_countsUC$mean_sd_group, adequate_countsUC$RMS_group_UC,pch = 21, bg = "grey35", col = "grey35" , cex = 0.5)
+points( lowcountsC$mean_sdcal_group, lowcountsC$RMS_group, col="blue", cex = 0.5)
+points( lowcountsUC$mean_sd_group, lowcountsUC$RMS_group_UC, col="grey35", cex = 0.5)
+
+
+title(xlab= "Mean Binned SD", ylab = "RMS Residuals", line = 2, cex.lab = "0.7")
+legend("bottomright", c("Uncalibrated Bins", "Calibrated Bins", "Raw Data", "Identity Function"), cex = 0.7, 
+       pch = c(16, 16, 1, NA), lty = c(NA, NA, NA, 1), col =c("grey35", "blue", "black", "red"))
+dev.off()
 
 #plot histogram of bins
 png( filename = "D:/GIS_SCOUT/GIS_SCOUT/figures/cal_sp_bins_eqfreq.png", width = 3.25, height = 1.25, units = "in", res = 200)
-par(mar= c(3, 3, 1, 1))
-hist(ind3$sd, breaks=55,  cex.lab=0.7, cex.axis=0.7, cex.main= 0.7, xaxt= "n",
+par(mar= c(0, 3, 1, 1))
+hist(ind4$sd, breaks=55,  cex.lab=0.7, cex.axis=0.7, cex.main= 0.7, xaxt= "n",
      xlab=" ", 
      main="", col="grey" ,
      ylab= "",
-     ylim=c(0, 10000),
+     ylim=c(0, 6000),
      xlim=c(0, 0.6))
-hist(ind3$cal, breaks=35,  add=TRUE, col=rgb(0,0,1,0.4),,
-     ylim=c(0, 10000),
+hist(ind4$cal, breaks=35,  add=TRUE, col=rgb(0,0,1,0.4),,
+     ylim=c(0, 6000),
      xlim=c(0, 0.6))
 legend("topright", c("Uncalibrated", "Calibrated"), cex = 0.8, fill =c("grey", rgb(0,0,1,0.4)))
 title( ylab = "Bin Counts", line = 2, cex.lab = "0.7")

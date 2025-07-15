@@ -5,10 +5,12 @@ library(dplyr)
 p4<-predict(rf_nonspatial_alldata, till_df, predict.all=TRUE) 
 p4mean<- apply(p4$individual, MARGIN=1, mean, na.rm= TRUE)
 p4sd<- apply(p4$individual, MARGIN=1, sd, na.rm= TRUE)
+ind4<-data.frame(observed=till_df$Al_avail, predicted=p4, mean=p4mean, sd=p4sd)
 ind4$error<- (ind4$observed- ind4$predicted.aggregate)
 
 #add my calibrated values
 ind4<- ind4 %>% mutate(cal = (sd*a+b))
+
 #r value plot 
 #first make the r statistic (r = residual/sd) 
 ind4<- ind4 %>% mutate(rC = error/cal)
@@ -51,11 +53,10 @@ RMSE = function(observed_data, predicted_data){
   sqrt(mean((observed_data - predicted_data)^2))
 }
 
-#binning
-quantile(ind4$sd)
+#binning the uncalibrated values
 ind4<- ind4 %>% 
   ungroup() %>%
-  mutate(sd_bin = cut_number(ind4$sd, n = 30))
+  mutate(sd_bin = cut_number(ind4$sd, n = 15))
 #Obtain RMSE of the bin for uncalibrated values
 Stats6 <- ind4 %>% group_by(sd_bin) %>% 
   summarize(mean_sd_group = mean(sd), RMS_group_UC = RMSE(observed, predicted.aggregate), NumFramesUC = n())
@@ -63,10 +64,11 @@ Stats6 <- ind4 %>% group_by(sd_bin) %>%
 # do the same thing for the calibrated values
 ind4<- ind4 %>% 
   ungroup() %>%
-  mutate(sdcal_bin = cut_number(ind4$cal, n = 30))
+  mutate(sdcal_bin = cut_number(ind4$cal, n = 15))
 #now obtain the RMSE of calibrated bins
 Stats7 <- ind4 %>% group_by(sdcal_bin) %>% 
   summarize(mean_sd_group = mean(sd), mean_sdcal_group = mean(cal), RMS_group = RMSE(observed, predicted.aggregate), NumFramesC = n())
+
 
 #Identify bins with few values in them
 lowcountsC<- subset(Stats7, NumFramesC<30)
@@ -75,24 +77,48 @@ adequate_countsC<- subset(Stats7, NumFramesC>30)
 lowcountsUC<- subset(Stats6, NumFramesUC<30)
 adequate_countsUC<- subset(Stats6, NumFramesUC>30)
 
+
+#Visualize large cloud of datapoints
+ind4<- ind4 %>% 
+  ungroup() %>%
+  mutate(sd_bin = cut_number(sd, 5000))
+#Obtain RMSE of the bin for uncalibrated values
+stats8 <- ind4 %>% group_by(sd_bin) %>% 
+  summarize(mean_sd_group = mean(sd), RMS_group_UC = RMSE(observed, predicted.aggregate), NumFramesUC = n())
+
+# do the same thing for the calibrated values
+ind4<- ind4 %>% 
+  ungroup() %>%
+  mutate(sdcal_bin = cut_number(cal, 5000))
+#now obtain the RMSE of calibrated bins
+stats9 <- ind4 %>% group_by(sdcal_bin) %>% 
+  summarize(mean_sd_group = mean(sd), mean_sdcal_group = mean(cal), RMS_group = RMSE(observed, predicted.aggregate), NumFramesC = n())
+
+
 #now make a plot (RMSE residuals vs standard deviation of the bootstrapped estimates)
 png( filename = "D:/GIS_SCOUT/GIS_SCOUT/figures/cal_asp_scattercode_equalsize.png", width = 3.25, height = 2.5, units = "in", res = 200)
 par(mar= c(3, 3, 0, 1))
-plot(adequate_countsC$mean_sdcal_group, adequate_countsC$RMS_group, 
+plot(stats9$mean_sdcal_group, stats9$RMS_group, 
      cex.lab=0.7, cex.axis=0.6, cex.main= 0.2,
      xlab = "", 
      ylab = "",
      abline(a=0, b=1, col= "red"),
-     pch = 21, bg = "blue", col = "blue",
+     pch = 16, col =rgb(0.6, 0.6, 1, 0.3), cex = 0.5,
      xlim=c(0, 0.6),
      ylim=c(0, .6))
-points(adequate_countsC$mean_sdcal_group, adequate_countsC$RMS_group,pch = 21, bg = "blue", col = "blue")
-points( adequate_countsUC$mean_sd_group, adequate_countsUC$RMS_group_UC,pch = 21, bg = "grey", col = "grey" )
-points( lowcountsC$mean_sdcal_group, lowcountsC$RMS_group, col="blue")
-points( lowcountsUC$mean_sd_group, lowcountsUC$RMS_group_UC, col="grey")
+points(stats8$mean_sd_group, stats8$RMS_group_UC,pch = 19, bg = rgb(0.8, 0.8, 0.8), col = rgb(0.8, 0.8, 0.8, 0.3), cex = 0.5)
+
+#add all points to the scatterplot
+abline(a=0, b=1, col= "red")
+points(adequate_countsC$mean_sdcal_group, adequate_countsC$RMS_group,pch = 21, bg = "blue", col = "blue", cex = 0.5)
+points( adequate_countsUC$mean_sd_group, adequate_countsUC$RMS_group_UC,pch = 21, bg = "grey35", col = "grey35" , cex = 0.5)
+points( lowcountsC$mean_sdcal_group, lowcountsC$RMS_group, col="blue", cex = 0.5)
+points( lowcountsUC$mean_sd_group, lowcountsUC$RMS_group_UC, col="grey35", cex = 0.5)
+
+
 title(xlab= "Mean Binned SD", ylab = "RMS Residuals", line = 2, cex.lab = "0.7")
-legend("bottomright", c("Uncalibrated", "Calibrated", "Low Counts", "Identity Function"), cex = 0.7, 
-       pch = c(16, 16, 1, NA), lty = c(NA, NA, NA, 1), col =c("grey", "blue", "black", "red"))
+legend("bottomright", c("Uncalibrated Bins", "Calibrated Bins", "Raw Data", "Identity Function"), cex = 0.7, 
+       pch = c(16, 16, 1, NA), lty = c(NA, NA, NA, 1), col =c("grey35", "blue", "black", "red"))
 dev.off()
 
 
@@ -103,10 +129,10 @@ hist(ind4$sd, breaks=50,  cex.lab=0.7, cex.axis=0.7, cex.main= 0.7, xaxt= "n",
      xlab=" ", 
      main="", col="grey" ,
      ylab= "",
-     ylim=c(0, 10000),
+     ylim=c(0, 6000),
      xlim=c(0, 0.6))
 hist(ind4$cal, breaks=35,  add=TRUE, col=rgb(0,0,1,0.4),,
-     ylim=c(0, 10000),
+     ylim=c(0, 6000),
      xlim=c(0, 1.5))
 legend("topright", c("Uncalibrated", "Calibrated"), cex = 0.8, fill =c("grey", rgb(0,0,1,0.4)))
 title( ylab = "Bin Counts", line = 2, cex.lab = "0.7")
