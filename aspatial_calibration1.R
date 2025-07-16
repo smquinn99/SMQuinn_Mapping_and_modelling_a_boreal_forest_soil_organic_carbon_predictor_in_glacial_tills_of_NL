@@ -69,7 +69,7 @@ lfun<- function(x, sd, r) {
 }
 
 ##Next, optimize NLL
-optimization<-optim(c(0.6, 0.21010965), lfun,  sd=ind$sd, r=ind$error, method = "BFGS")
+optimization<-optim(c(0.5, 0.21010965), lfun,  sd=ind$sd, r=ind$error, method = "BFGS")
 optimization
 oparams<- optimization$par
 a<-oparams[1]

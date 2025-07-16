@@ -2,7 +2,7 @@
 #this code must be run before running the spatial calibration code
 
 #set working directory
-setwd("D:/GIS_SCOUT/GIS_SCOUT")
+setwd("D:/GIS_SCOUT/GIS_SCOUT/smquinn_data")
 
 
 #Add in all packages to be used
