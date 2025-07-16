@@ -2,7 +2,7 @@
 #this code must be run before running the Aspatial calibration code
 
 #set working directory
-setwd("D:/GIS_SCOUT/GIS_SCOUT")
+setwd("D:/GIS_SCOUT/GIS_SCOUT/smquinn_data")
 
 #Add in all packages to be used
 library(terra)
@@ -12,15 +12,15 @@ library(MultiscaleDTM)
 library(dplyr)
 
 #load rasters
-bedrockgeo<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/resample_attempts/bedrockgeo5_20.tif")
-unit_size<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/resample_attempts/unit_size_nn.tif")
-CanDEMelev_RS<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/RS_20/CanDEMelev_20.tif")
-climate_zones_RS<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/REVISED_CLIMATE_zones.TIF")
-distOcean_RS<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/RS_20/NEWdistOcean_20.tif")
-NLDEM<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/RS_20/NLDEM_20.tif")
-surficial_regional_RS<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/resample_attempts/new_surficialgeo_20.tif")
-ruggedness<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/RS_20/ruggedness_20.tif")
-slope<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/RS_20/slope_20.tif")
+bedrockgeo<- rast("aspatial_model_layers/bedrockgeo5_20.tif")
+unit_size<- rast("aspatial_model_layers/unit_size_nn.tif")
+CanDEMelev_RS<- rast("aspatial_model_layers/CanDEMelev_20.tif")
+climate_zones_RS<- rast("aspatial_model_layers/REVISED_CLIMATE_zones.TIF")
+distOcean_RS<- rast("aspatial_model_layers/NEWdistOcean_20.tif")
+NLDEM<- rast("aspatial_model_layers/NLDEM_20.tif")
+surficial_regional_RS<- rast("aspatial_model_layers/new_surficialgeo_20.tif")
+ruggedness<- rast("aspatial_model_layers/ruggedness_20.tif")
+slope<- rast("aspatial_model_layers/slope_20.tif")
 
 #make factor data into factors
 BG_df<- data.frame(id= 1:46,bedrockgeo= as.character(1:46))
@@ -43,7 +43,7 @@ is.factor(surficial_regional_RS)
 rasterstack_nonspatial<- c(ruggedness, bedrockgeo, unit_size, NLDEM, climate_zones_RS, distOcean_RS, slope, surficial_regional_RS)
 
 #Bring in till geochemistry points
-till<- vect("D:/GIS_SCOUT/GIS_SCOUT/Till Info/till_with_climate.shp")
+till<- vect("till_with_climate.shp")
 till_df<- as.data.frame(till)
 
 #extract till point raster data
@@ -96,7 +96,7 @@ RMSE = function(observed_data, predicted_data){
 #Visualize the importance
 aspatial_importance<-importance(rf_nonspatial_alldata)
 aspatial_importance_table<-as.data.frame(aspatial_importance)
-write.csv(aspatial_importance_table, file="sspatial_importance_table.csv")
+write.csv(aspatial_importance_table, file="spatial_importance_table.csv")
 
 #Check the variable importance
 varImpPlot(rf_nonspatial_alldata, main= "Model One: Predicted vs Observed Till Al Availability")
@@ -129,7 +129,7 @@ mm<- do.call("rbind", l)
 model_one_RMSE<-RMSE(mm$observed, mm$predicted)
 
 #Make Al availability prediction
-aspatial_prediction<-predict( rasterstack_nonspatial, rf_nonspatial_alldata, filename = "aspatial_prediction_FINAL_TEST1.tif", overwrite=TRUE)
+aspatial_prediction<-predict( rasterstack_nonspatial, rf_nonspatial_alldata, filename = "aspatial_prediction.tif", overwrite=TRUE)
 
 ####Now map uncertainty. This is very computationally heavy and may need to be split up
 loop_fun<- function(rf_nonspatial_alldata, rasterstack_nonspatial){
@@ -139,8 +139,8 @@ loop_fun<- function(rf_nonspatial_alldata, rasterstack_nonspatial){
   v <- v$individual
   apply(v, 1, sd)
 }
-###predict all at once
-#pred_fun <- terra::predict(rf_nonspatial_alldata, rasterstack_nonspatial, fun=loop_fun, filename= ("D:/GIS_SCOUT/GIS_SCOUT/final_test_code/test_ns_rasters/testns_sd1.tif"), overwrite= TRUE)
+###predict all at once if you can
+#prediction <- terra::predict(rf_nonspatial_alldata, rasterstack_nonspatial, fun=loop_fun, filename= ("asd.tif"), overwrite= TRUE)
 
 
 # OR If computing power is limited, slice the raster into pieces and compute one at a time
@@ -155,9 +155,18 @@ for(i in seq(ext(rasterstack_nonspatial)[3], ext(rasterstack_nonspatial)[4], val
   rast_ext[3]<-i
   rast_ext[4]<-i+value1
   window(rasterstack_nonspatial)<-rast_ext
-  terra::predict(rasterstack_nonspatial, rf_nonspatial_alldata, fun=loop_fun, filename= paste0("D:/GIS_SCOUT/GIS_SCOUT/temp_rasters/nstest", i, ".tif"), overwrite= TRUE)
+  terra::predict(rasterstack_nonspatial, rf_nonspatial_alldata, fun=loop_fun, filename= paste0("asdstrips/asd", i, ".tif"), overwrite= TRUE)
   window(rasterstack_nonspatial)<-NULL
   gc()
 }
 value1
 
+#here is where you can mosaic the raster strips together
+rastlist1 <- list.files(path = "asdstrips", pattern='.tif$', all.files= T, full.names= T)
+print(rastlist1)
+
+allrasters1 <- lapply(rastlist1, FUN = rast)
+
+mos<- do.call(mosaic, allrasters1)
+test_mos<- writeRaster(mos, filename = "asd_mosaic.tif")
+plot(mos)

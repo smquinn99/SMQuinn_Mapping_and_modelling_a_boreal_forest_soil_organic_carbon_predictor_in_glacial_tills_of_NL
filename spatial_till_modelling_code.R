@@ -13,53 +13,53 @@ library(tidyr)
 library(dplyr)
 
 #load rasters
-unit_size<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/resample_attempts/unit_size_nn.tif")
-CanDEMelev_RS<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/RS_20/CanDEMelev_20.tif")
-climate_zones_RS<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/REVISED_CLIMATE_zones.TIF")
-distOcean_RS<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/RS_20/NEWdistOcean_20.tif")
-NLDEM<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/RS_20/NLDEM_20.tif")
-surficial_regional_RS<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/resample_attempts/new_surficialgeo_20.tif")
-ruggedness<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/RS_20/ruggedness_20.tif")
-slope<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/RS_20/slope_20.tif")
+unit_size<- rast("spatial_model_layers/unit_size_nn.tif")
+CanDEMelev_RS<- rast("spatial_model_layers/CanDEMelev_20.tif")
+climate_zones_RS<- rast("spatial_model_layers/REVISED_CLIMATE_zones.TIF")
+distOcean_RS<- rast("spatial_model_layers/NEWdistOcean_20.tif")
+NLDEM<- rast("spatial_model_layers/NLDEM_20.tif")
+surficial_regional_RS<- rast("spatial_model_layers/new_surficialgeo_20.tif")
+ruggedness<- rast("spatial_model_layers/ruggedness_20.tif")
+slope<- rast("spatial_model_layers/slope_20.tif")
 
 
 ###load bedrock rasters
-u1<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/batch_dist/dist1.tif")
-u1<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/batch_dist/dist1.tif")
-u2<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/batch_dist/dist2.tif")
-u3<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/batch_dist/dist3.tif")
-u4<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/batch_dist/dist4.tif")
-u8<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/batch_dist/dist8.tif")
-u9<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/batch_dist/dist9.tif")
-u10<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/batch_dist/dist10.tif")
-u12<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/batch_dist/dist12.tif")
-u13<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/batch_dist/dist13.tif")
-u14<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/batch_dist/dist14.tif")
-u15<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/batch_dist/dist15.tif")
-u16<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/batch_dist/dist16.tif")
-u17<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/batch_dist/dist17.tif")
-u18<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/batch_dist/dist18.tif")
-u19<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/batch_dist/dist19.tif")
-u20<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/batch_dist/dist20.tif")
-u21<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/batch_dist/dist21.tif")
-u23<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/batch_dist/dist23.tif")
-u24<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/batch_dist/dist24.tif")
-u25<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/batch_dist/dist25.tif")
-u26<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/batch_dist/dist26.tif")
-u27<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/batch_dist/dist27.tif")
-u28<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/batch_dist/dist28.tif")
-u29<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/batch_dist/dist29.tif")
-u30<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/batch_dist/dist30.tif")
-u31<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/batch_dist/dist31.tif")
-u32<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/batch_dist/dist32.tif")
-u33<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/batch_dist/dist33.tif")
-u34<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/batch_dist/dist34.tif")
-u35<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/batch_dist/dist35.tif")
-u36<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/batch_dist/dist36.tif")
-u37<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/batch_dist/dist37.tif")
-u39<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/batch_dist/dist39.tif")
-u40<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/batch_dist/dist40.tif")
-u41<- rast("D:/GIS_SCOUT/GIS_SCOUT/Clipped_layers_for_model/batch_dist/dist41.tif")
+u1<- rast("spatial_model_layers/dist1.tif")
+u1<- rast("spatial_model_layers/dist1.tif")
+u2<- rast("spatial_model_layers/dist2.tif")
+u3<- rast("spatial_model_layers/dist3.tif")
+u4<- rast("spatial_model_layers/dist4.tif")
+u8<- rast("spatial_model_layers/dist8.tif")
+u9<- rast("spatial_model_layers/dist9.tif")
+u10<- rast("spatial_model_layers/dist10.tif")
+u12<- rast("spatial_model_layers/dist12.tif")
+u13<- rast("spatial_model_layers/dist13.tif")
+u14<- rast("spatial_model_layers/dist14.tif")
+u15<- rast("spatial_model_layers/dist15.tif")
+u16<- rast("spatial_model_layers/dist16.tif")
+u17<- rast("spatial_model_layers/dist17.tif")
+u18<- rast("spatial_model_layers/dist18.tif")
+u19<- rast("spatial_model_layers/dist19.tif")
+u20<- rast("spatial_model_layers/dist20.tif")
+u21<- rast("spatial_model_layers/dist21.tif")
+u23<- rast("spatial_model_layers/dist23.tif")
+u24<- rast("spatial_model_layers/dist24.tif")
+u25<- rast("spatial_model_layers/dist25.tif")
+u26<- rast("spatial_model_layers/dist26.tif")
+u27<- rast("spatial_model_layers/dist27.tif")
+u28<- rast("spatial_model_layers/dist28.tif")
+u29<- rast("spatial_model_layers/dist29.tif")
+u30<- rast("spatial_model_layers/dist30.tif")
+u31<- rast("spatial_model_layers/dist31.tif")
+u32<- rast("spatial_model_layers/dist32.tif")
+u33<- rast("spatial_model_layers/dist33.tif")
+u34<- rast("spatial_model_layers/dist34.tif")
+u35<- rast("spatial_model_layers/dist35.tif")
+u36<- rast("spatial_model_layers/dist36.tif")
+u37<- rast("spatial_model_layers/dist37.tif")
+u39<- rast("spatial_model_layers/dist39.tif")
+u40<- rast("spatial_model_layers/dist40.tif")
+u41<- rast("spatial_model_layers/dist41.tif")
 
 
 #tell r that factor data are factors
@@ -81,7 +81,7 @@ rasterstack<- c(ruggedness, unit_size, NLDEM,  climate_zones_RS, distOcean_RS,
                 u36, u37, u39, u40, u41)
 
 #Bring in till geochemistry points
-till<- vect("Till Info/till_with_climate.shp")
+till<- vect("till_with_climate.shp")
 till_df<- as.data.frame(till)
 
 #extract till point raster data
@@ -196,13 +196,13 @@ names(rasterstack)<- c("ruggedness", "unit_size", "NLDEM", "climate_zones_RS", "
 
 #train model
 rfspatial<- randomForest(Al_avail~ ruggedness + unit_size + NLDEM + climate_zones_RS + slope + distOcean_RS
-                           + surficial_regional_RS + u1 + u2 + u3 + u4 + u8 + u9 + u10 + u12 + u13 + u14 
-                           + u15 + u16 + u17 + u18 + u19 + u20 + u21 + u23 + u24 + u25 + u26 + u27 +
-                             u28 + u29 + u30 + u31 + u32 + u33 + u34 + u35 + u36 + u37 + u39 + u40 + u40 , till_df, nodesize = 4, ntree=2000, mtry=13, progress = TRUE)
+                         + surficial_regional_RS + u1 + u2 + u3 + u4 + u8 + u9 + u10 + u12 + u13 + u14 
+                         + u15 + u16 + u17 + u18 + u19 + u20 + u21 + u23 + u24 + u25 + u26 + u27 +
+                           u28 + u29 + u30 + u31 + u32 + u33 + u34 + u35 + u36 + u37 + u39 + u40 + u40 , till_df, nodesize = 4, ntree=2000, mtry=13, progress = TRUE)
 #Visualize the importance
 spatial_importance<-importance(rfspatial)
 spatial_importance_table<-as.data.frame(spatial_importance)
-write.csv(spatial_importance_table, file="D:/GIS_SCOUT/GIS_SCOUT/spatial_importance_table2.csv")
+write.csv(spatial_importance_table, file="spatial_importance_table.csv")
 
 #Create an RMSE function
 RMSE = function(observed_data, predicted_data){
@@ -254,7 +254,7 @@ loop_fun<- function(rfspatial, rasterstack){
   apply(v, 1, sd)
 }
 ##predict all at once
-pred_fun<- terra::predict( rfspatial, rasterstack, fun=loop_fun)
+#prediction<- terra::predict( rfspatial, rasterstack, fun=loop_fun, filename= ("ssd.tif"), overwrite= TRUE)
 
 # OR If computing power is limited, slice the raster into pieces and compute one at a time
 window(rasterstack)
@@ -267,10 +267,19 @@ for(i in seq(ext(rasterstack)[3], ext(rasterstack)[4], value1)){
   rast_ext[3]<-i
   rast_ext[4]<-i+value1
   window(rasterstack)<-rast_ext
-  terra::predict(rasterstack, rfspatial, fun=loop_fun, filename= paste0("D:/GIS_SCOUT/GIS_SCOUT/temp_rasters/ssd_test2", i, ".tif"), overwrite= TRUE)
+  terra::predict(rasterstack, rfspatial, fun=loop_fun, filename= paste0("ssdstrips/ssd", i, ".tif"), overwrite= TRUE)
   window(rasterstack)<-NULL
   gc()
 }
 value1
 
+#mosaic the raster strips together
+rastlist1 <- list.files(path = "ssdstrips", pattern='.tif$', all.files= T, full.names= T)
+print(rastlist1)
+
+allrasters1 <- lapply(rastlist1, FUN = rast)
+
+mos<- do.call(mosaic, allrasters1)
+test_mos<- writeRaster(mos, filename = "ssd_mosaic.tif")
+plot(mos)
 
