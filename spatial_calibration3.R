@@ -29,7 +29,7 @@ uncal_RMSE<- RMSE(ind4$error, ind4$sd)
 Cal_RMSE<-RMSE(ind4$error, ind4$cal)
 #Now plot
 
-png( filename = "D:/GIS_SCOUT/GIS_SCOUT/figures/cal_asp_hist.png", width = 3.25, height = 3, units = "in", res = 200)
+png( filename = "cal_asp_hist.png", width = 3.25, height = 3, units = "in", res = 200)
 par(mar= c(3, 3, 1, 1))
 hist(rUC, breaks=25, freq=FALSE, cex.main = 1,
      xlab="", cex.lab=0.8, cex.axis=0.8,
@@ -97,7 +97,7 @@ stats9 <- ind4 %>% group_by(sdcal_bin) %>%
 
 
 #now make a plot (RMSE residuals vs standard deviation of the bootstrapped estimates)
-png( filename = "D:/GIS_SCOUT/GIS_SCOUT/figures/cal_as_scattercode_equalsize.png", width = 3.25, height = 2.5, units = "in", res = 200)
+png( filename = "cal_as_scattercode.png", width = 3.25, height = 2.5, units = "in", res = 200)
 par(mar= c(3, 3, 0, 1))
 plot(stats9$mean_sdcal_group, stats9$RMS_group, 
      cex.lab=0.7, cex.axis=0.6, cex.main= 0.2,
@@ -123,7 +123,7 @@ legend("bottomright", c("Uncalibrated Bins", "Calibrated Bins", "Raw Data", "Ide
 dev.off()
 
 #plot histogram of bins
-png( filename = "D:/GIS_SCOUT/GIS_SCOUT/figures/cal_sp_bins_eqfreq.png", width = 3.25, height = 1.25, units = "in", res = 200)
+png( filename = "cal_sp_bins.png", width = 3.25, height = 1.25, units = "in", res = 200)
 par(mar= c(0, 3, 1, 1))
 hist(ind4$sd, breaks=55,  cex.lab=0.7, cex.axis=0.7, cex.main= 0.7, xaxt= "n",
      xlab=" ", 

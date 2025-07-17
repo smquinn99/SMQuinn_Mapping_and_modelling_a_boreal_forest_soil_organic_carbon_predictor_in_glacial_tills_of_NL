@@ -81,7 +81,7 @@ rasterstack<- c(ruggedness, unit_size, NLDEM,  climate_zones_RS, distOcean_RS,
                 u36, u37, u39, u40, u41)
 
 #Bring in till geochemistry points
-till<- vect("till_with_climate.shp")
+till<- vect("till_geochemistry/till_with_climate.shp")
 till_df<- as.data.frame(till)
 
 #extract till point raster data
@@ -243,7 +243,7 @@ mm<- do.call("rbind", l)
 model_two_RMSE<-RMSE(mm$observed, mm$predicted)
 
 #Predict values from model
-spatial_predict<-predict( rasterstack, rfspatial,filename = "spatial_prediction.tif", overwrite=TRUE)
+spatial_predict<-predict( rasterstack, rfspatial,filename = "results/spatial_prediction.tif", overwrite=TRUE)
 
 ####Now map uncertainty. This is very computationally heavy and may need to be split up
 loop_fun<- function(rfspatial, rasterstack){

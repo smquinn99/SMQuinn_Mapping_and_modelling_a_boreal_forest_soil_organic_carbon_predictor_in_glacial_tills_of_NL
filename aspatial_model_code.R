@@ -129,7 +129,7 @@ mm<- do.call("rbind", l)
 model_one_RMSE<-RMSE(mm$observed, mm$predicted)
 
 #Make Al availability prediction
-aspatial_prediction<-predict( rasterstack_nonspatial, rf_nonspatial_alldata, filename = "aspatial_prediction.tif", overwrite=TRUE)
+aspatial_prediction<-predict( rasterstack_nonspatial, rf_nonspatial_alldata, filename = "results/aspatial_prediction.tif", overwrite=TRUE)
 
 ####Now map uncertainty. This is very computationally heavy and may need to be split up
 loop_fun<- function(rf_nonspatial_alldata, rasterstack_nonspatial){
