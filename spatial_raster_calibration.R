@@ -1,5 +1,5 @@
 
-####now to apply our calibration factor to our raster layer##########  v   
+####now to apply our calibration factor to our raster layer##########   
 s_sd<- rast("spatial_sd.tif")
 
 cal_s_sd<- s_sd*a+b
