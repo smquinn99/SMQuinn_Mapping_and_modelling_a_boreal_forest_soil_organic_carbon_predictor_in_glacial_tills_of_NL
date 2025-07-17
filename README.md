@@ -1,9 +1,10 @@
+Code for replication of models found in "Mapping and modelling a boreal forest soil organic carbon predictor in the glacial till of Newfoundland, Canada"
 The following details the use of each code included in this repository:
 
 This code may be used to validate results of the associated till geochemistry model, 
 but can also be applied to different purposes. For example, one could follow the 
-same workflow for approximating a geostatistical model with one’s own datasets with
-minimal editing. Additionally, the calibration of Random Forest uncertainty code can
+same workflow for approximating a geostatistical model with one’s own datasets. 
+Additionally, the calibration of Random Forest uncertainty code can
 easily be applied to a user’s own model predictions.
 
  The spatial and aspatial codes are very similar, in some cases nearly identical.
