@@ -43,7 +43,7 @@ is.factor(surficial_regional_RS)
 rasterstack_nonspatial<- c(ruggedness, bedrockgeo, unit_size, NLDEM, climate_zones_RS, distOcean_RS, slope, surficial_regional_RS)
 
 #Bring in till geochemistry points
-till<- vect("till_with_climate.shp")
+till<- vect("till_geochemistry/till_with_climate.shp")
 till_df<- as.data.frame(till)
 
 #extract till point raster data
@@ -87,7 +87,9 @@ names(rasterstack_nonspatial)<- c( "ruggedness", "bedrockgeo", "unit_size", "NLD
                                    "slope", "surficial_regional_RS")
 
 #Train model
-rf_nonspatial_alldata<- randomForest(Al_avail~ ruggedness + bedrockgeo + unit_size + NLDEM + climate_zones_RS + distOcean_RS + slope+ surficial_regional_RS, till_df, ntree=1000, mtry=4)
+rf_nonspatial_alldata<- randomForest(Al_avail~ ruggedness + bedrockgeo + unit_size + NLDEM + climate_zones_RS +
+                                       distOcean_RS + slope+ surficial_regional_RS, till_df, ntree=1000, mtry=4, keep.inbag = TRUE)
+save.image(file = "aspatial_data.RData")
 
 #Create an RMSE function
 RMSE = function(observed_data, predicted_data){
@@ -147,26 +149,26 @@ loop_fun<- function(rf_nonspatial_alldata, rasterstack_nonspatial){
 window(rasterstack_nonspatial)
 rast_ext<-ext(rasterstack_nonspatial)
 window(rasterstack_nonspatial)<- NULL
-value1<- (ext(rasterstack_nonspatial)[4]- ext(rasterstack_nonspatial)[3])/500
+value1<- (ext(rasterstack_nonspatial)[1]- ext(rasterstack_nonspatial)[2])/500
 
-for(i in seq(ext(rasterstack_nonspatial)[3], ext(rasterstack_nonspatial)[4], value1)){
+for(i in seq(ext(rasterstack_nonspatial)[1], ext(rasterstack_nonspatial)[2], value1)){
   print(i)
   rast_ext<-ext(rasterstack_nonspatial)
-  rast_ext[3]<-i
-  rast_ext[4]<-i+value1
+  rast_ext[1]<-i
+  rast_ext[2]<-i+value1
   window(rasterstack_nonspatial)<-rast_ext
-  terra::predict(rasterstack_nonspatial, rf_nonspatial_alldata, fun=loop_fun, filename= paste0("asdstrips/asd", i, ".tif"), overwrite= TRUE)
+  terra::predict(rasterstack_nonspatial, rf_nonspatial_alldata, fun=loop_fun, filename= paste0("strips/asdstrips/redo_asdstrips", i, ".tif"), overwrite= TRUE)
   window(rasterstack_nonspatial)<-NULL
   gc()
 }
 value1
 
 #here is where you can mosaic the raster strips together
-rastlist1 <- list.files(path = "asdstrips", pattern='.tif$', all.files= T, full.names= T)
+rastlist1 <- list.files(path = "strips/asdstrips", pattern='.tif$', all.files= T, full.names= T)
 print(rastlist1)
 
 allrasters1 <- lapply(rastlist1, FUN = rast)
 
 mos<- do.call(mosaic, allrasters1)
-test_mos<- writeRaster(mos, filename = "asd_mosaic.tif")
+test_mos<- writeRaster(mos, filename = "redo_asd_mosaic.tif")
 plot(mos)

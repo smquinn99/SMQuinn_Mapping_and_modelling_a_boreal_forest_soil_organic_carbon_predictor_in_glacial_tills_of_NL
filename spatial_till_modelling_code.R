@@ -4,7 +4,6 @@
 #set working directory
 setwd("D:/GIS_SCOUT/GIS_SCOUT/smquinn_data")
 
-
 #Add in all packages to be used
 library(terra)
 library(randomForest)
@@ -14,7 +13,7 @@ library(dplyr)
 
 #load rasters
 unit_size<- rast("spatial_model_layers/unit_size_nn.tif")
-CanDEMelev_RS<- rast("spatial_model_layers/CanDEMelev_20.tif")
+#CanDEMelev_RS<- rast("spatial_model_layers/CanDEMelev_20.tif")
 climate_zones_RS<- rast("spatial_model_layers/REVISED_CLIMATE_zones.TIF")
 distOcean_RS<- rast("spatial_model_layers/NEWdistOcean_20.tif")
 NLDEM<- rast("spatial_model_layers/NLDEM_20.tif")
@@ -198,7 +197,9 @@ names(rasterstack)<- c("ruggedness", "unit_size", "NLDEM", "climate_zones_RS", "
 rfspatial<- randomForest(Al_avail~ ruggedness + unit_size + NLDEM + climate_zones_RS + slope + distOcean_RS
                          + surficial_regional_RS + u1 + u2 + u3 + u4 + u8 + u9 + u10 + u12 + u13 + u14 
                          + u15 + u16 + u17 + u18 + u19 + u20 + u21 + u23 + u24 + u25 + u26 + u27 +
-                           u28 + u29 + u30 + u31 + u32 + u33 + u34 + u35 + u36 + u37 + u39 + u40 + u40 , till_df, nodesize = 4, ntree=2000, mtry=13, progress = TRUE)
+                           u28 + u29 + u30 + u31 + u32 + u33 + u34 + u35 + u36 + u37 + u39 + u40 + u40 ,
+                         till_df, nodesize = 4, ntree=2000, mtry=13, progress = TRUE, keep.inbag = TRUE)
+save.image(file = "spatial_data.RData")
 #Visualize the importance
 spatial_importance<-importance(rfspatial)
 spatial_importance_table<-as.data.frame(spatial_importance)
@@ -210,7 +211,7 @@ RMSE = function(observed_data, predicted_data){
 }
 
 #Check the variable importance
-varImpPlot(rfspatial, main= "Model Two: Predicted vs Observed Till Al Availability")
+varImpPlot(rf_spatial, main= "Model Two: Predicted vs Observed Till Al Availability")
 oobRMSEspatial<- RMSE(rfspatial$y, rfspatial$predicted)
 
 
@@ -227,7 +228,7 @@ for (i in 1:k) {
   print(i)  
   test<- till_df[till_df$fold==i, ]  
   train<- till_df[till_df$fold!=i, ]  
-  rf_spatial<-randomForest(Al_avail~ ruggedness + unit_size + NLDEM + climate_zones_RS + distOcean_RS + slope
+  rfspatial<-randomForest(Al_avail~ ruggedness + unit_size + NLDEM + climate_zones_RS + distOcean_RS + slope
                            + surficial_regional_RS + u1 + u2 + u3 + u4 + u8 + u9 + u10 + u12 + u13 + u14 
                            + u15 + u16 + u17 + u18 + u19 + u20 + u21 + u23 + u24 + u25 + u26 + u27 +
                              u28 + u29 + u30 + u31 + u32 + u33 + u34 + u35 + u36 + u37 + u39 + u40 + u40, train, ntree=2000) 
@@ -253,6 +254,8 @@ loop_fun<- function(rfspatial, rasterstack){
   v <- v$individual
   apply(v, 1, sd)
 }
+
+save.image( file = "spatial.Rdata")
 ##predict all at once
 #prediction<- terra::predict( rfspatial, rasterstack, fun=loop_fun, filename= ("ssd.tif"), overwrite= TRUE)
 
@@ -267,14 +270,14 @@ for(i in seq(ext(rasterstack)[3], ext(rasterstack)[4], value1)){
   rast_ext[3]<-i
   rast_ext[4]<-i+value1
   window(rasterstack)<-rast_ext
-  terra::predict(rasterstack, rfspatial, fun=loop_fun, filename= paste0("ssdstrips/ssd", i, ".tif"), overwrite= TRUE)
+  terra::predict(rasterstack, rfspatial, fun=loop_fun, filename= paste0("strips/ssdstrips/redo_ssdstrips", i, ".tif"), overwrite= TRUE)
   window(rasterstack)<-NULL
   gc()
 }
 value1
 
 #mosaic the raster strips together
-rastlist1 <- list.files(path = "ssdstrips", pattern='.tif$', all.files= T, full.names= T)
+rastlist1 <- list.files(path = "strips/ssdstrips", pattern='.tif$', all.files= T, full.names= T)
 print(rastlist1)
 
 allrasters1 <- lapply(rastlist1, FUN = rast)

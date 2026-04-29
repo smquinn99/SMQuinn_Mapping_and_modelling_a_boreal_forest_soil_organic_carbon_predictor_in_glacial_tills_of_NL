@@ -1,11 +1,19 @@
 
 #predict test data
 p2<-predict(rf_nonspatial_alldata, test, predict.all=TRUE)
-p2mean<- apply(p2$individual, MARGIN=1, mean, na.rm= TRUE)
-p2sd<- apply(p2$individual, MARGIN=1, sd, na.rm= TRUE)
 
-ind2<-data.frame(observed=test$Al_avail, predicted=p2, mean=p2mean, sd=p2sd) 
-ind2$error<- (ind2$observed- ind2$predicted.aggregate)
+#extract only the individual predictions
+p2 <- p2$individual
+
+
+#calculate the mean and sd 
+p2mean<- apply(p2, MARGIN=1, mean, na.rm= TRUE)
+p2sd<- apply(p2, MARGIN=1, sd, na.rm= TRUE)
+
+#Then calculate the error
+ind2<-data.frame(observed=test$Al_avail, predicted=p2mean, sd=p2sd) 
+ind2$error<- (ind2$observed- ind2$predicted)
+
 
 #add in calibrated sd values
 ind2<- ind2 %>% mutate(cal = (sd*a + b))
@@ -48,7 +56,7 @@ ind2<- ind2 %>%
   mutate(sd_bin = cut(sd, 15))
 #now get the RMSE of the bin for uncalibrated values
 Stats2 <- ind2 %>% group_by(sd_bin) %>% 
-  summarize(mean_sdcal_group = mean(cal), mean_sd_group = mean(sd), RMS_group_UC = RMSE(observed, predicted.aggregate), NumFramesUC = n())
+  summarize(mean_sd_group = mean(sd), RMS_group_UC = RMSE(observed, predicted), NumFramesUC = n())
 
 #calibrated values
 ind2<- ind2 %>% 
@@ -56,7 +64,7 @@ ind2<- ind2 %>%
   mutate(sdcal_bin = cut(cal, 15))
 #rmse of calibrated bins
 Stats3 <- ind2 %>% group_by(sdcal_bin) %>% 
-  summarize(mean_sdcal_group = mean(cal), RMS_group = RMSE(observed, predicted.aggregate), NumFramesC = n())
+  summarize(mean_sdcal_group = mean(cal), RMS_group = RMSE(observed, predicted), NumFramesC = n())
 
 
 #Identify bins with few values in them
@@ -95,3 +103,4 @@ legend("topright", c("Uncalibrated", "Calibrated"), cex = 01, fill=c("grey", rgb
 
 uncal_test_RMSE<- RMSE(ind2$error, ind2$sd)
 cal_test_RMSE<-RMSE(ind2$error, ind2$cal)
+

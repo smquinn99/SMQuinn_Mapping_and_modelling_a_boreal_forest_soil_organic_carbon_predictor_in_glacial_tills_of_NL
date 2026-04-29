@@ -1,12 +1,18 @@
-library(dplyr)
+
 
 #make predictions over the whole dataframe
 p4<-predict(rfspatial, till_df, predict.all=TRUE) 
-p4mean<- apply(p4$individual, MARGIN=1, mean, na.rm= TRUE)
-p4sd<- apply(p4$individual, MARGIN=1, sd, na.rm= TRUE)
 
-ind4<-data.frame(observed=till_df$Al_avail, predicted=p4, mean=p4mean, sd=p4sd)
-ind4$error<- (ind4$observed- ind4$predicted.aggregate)
+p_oobs4 <- p4$individual
+
+
+#calculate the mean and sd using only the oobs.
+p4mean<- apply(p_oobs4, MARGIN=1, mean, na.rm= TRUE)
+p4sd<- apply(p_oobs4, MARGIN=1, sd, na.rm= TRUE)
+
+#Then calculate the error
+ind4<-data.frame(observed=till_df$Al_avail, predicted=p4mean, sd=p4sd) 
+ind4$error<- (ind4$observed- ind4$predicted)
 
 #add my calibrated values
 ind4<- ind4 %>% mutate(cal = (sd*a+b))
@@ -27,9 +33,10 @@ sd_Rstat_UC<-sd(ind4$rUC)
 
 uncal_RMSE<- RMSE(ind4$error, ind4$sd)
 Cal_RMSE<-RMSE(ind4$error, ind4$cal)
+
 #Now plot
 
-png( filename = "cal_asp_hist.png", width = 3.25, height = 3, units = "in", res = 200)
+png( filename = "cal_sp_hist.png", width = 3.25, height = 3, units = "in", res = 200)
 par(mar= c(3, 3, 1, 1))
 hist(rUC, breaks=25, freq=FALSE, cex.main = 1,
      xlab="", cex.lab=0.8, cex.axis=0.8,
@@ -59,7 +66,7 @@ ind4<- ind4 %>%
   mutate(sd_bin = cut_number(ind4$sd, n = 15))
 #Obtain RMSE of the bin for uncalibrated values
 Stats6 <- ind4 %>% group_by(sd_bin) %>% 
-  summarize(mean_sd_group = mean(sd), RMS_group_UC = RMSE(observed, predicted.aggregate), NumFramesUC = n())
+  summarize(mean_sd_group = mean(sd), RMS_group_UC = RMSE(observed, predicted), NumFramesUC = n())
 
 # do the same thing for the calibrated values
 ind4<- ind4 %>% 
@@ -67,7 +74,7 @@ ind4<- ind4 %>%
   mutate(sdcal_bin = cut_number(ind4$cal, n = 15))
 #now obtain the RMSE of calibrated bins
 Stats7 <- ind4 %>% group_by(sdcal_bin) %>% 
-  summarize(mean_sd_group = mean(sd), mean_sdcal_group = mean(cal), RMS_group = RMSE(observed, predicted.aggregate), NumFramesC = n())
+  summarize(mean_sd_group = mean(sd), mean_sdcal_group = mean(cal), RMS_group = RMSE(observed, predicted), NumFramesC = n())
 
 
 #Identify bins with few values in them
@@ -81,23 +88,24 @@ adequate_countsUC<- subset(Stats6, NumFramesUC>30)
 #Visualize large cloud of datapoints
 ind4<- ind4 %>% 
   ungroup() %>%
-  mutate(sd_bin = cut_number(sd, 5000))
+  mutate(sd_bin = cut_number(sd, 4500))
 #Obtain RMSE of the bin for uncalibrated values
 stats8 <- ind4 %>% group_by(sd_bin) %>% 
-  summarize(mean_sd_group = mean(sd), RMS_group_UC = RMSE(observed, predicted.aggregate), NumFramesUC = n())
+  summarize(mean_sd_group = mean(sd), RMS_group_UC = RMSE(observed, predicted), NumFramesUC = n())
 
 # do the same thing for the calibrated values
 ind4<- ind4 %>% 
   ungroup() %>%
-  mutate(sdcal_bin = cut_number(cal, 5000))
+  mutate(sdcal_bin = cut_number(cal, 4500))
 #now obtain the RMSE of calibrated bins
 stats9 <- ind4 %>% group_by(sdcal_bin) %>% 
-  summarize(mean_sd_group = mean(sd), mean_sdcal_group = mean(cal), RMS_group = RMSE(observed, predicted.aggregate), NumFramesC = n())
+  summarize(mean_sd_group = mean(sd), mean_sdcal_group = mean(cal), RMS_group = RMSE(observed, predicted), NumFramesC = n())
 
 
 
 #now make a plot (RMSE residuals vs standard deviation of the bootstrapped estimates)
-png( filename = "cal_as_scattercode.png", width = 3.25, height = 2.5, units = "in", res = 200)
+png( filename = "cal_sp_scattercode.png", width = 3.25, height = 2.5, units = "in", res = 200)
+
 par(mar= c(3, 3, 0, 1))
 plot(stats9$mean_sdcal_group, stats9$RMS_group, 
      cex.lab=0.7, cex.axis=0.6, cex.main= 0.2,
@@ -120,6 +128,7 @@ points( lowcountsUC$mean_sd_group, lowcountsUC$RMS_group_UC, col="grey35", cex =
 title(xlab= "Mean Binned SD", ylab = "RMS Residuals", line = 2, cex.lab = "0.7")
 legend("bottomright", c("Uncalibrated Bins", "Calibrated Bins", "Raw Data", "Identity Function"), cex = 0.7, 
        pch = c(16, 16, 1, NA), lty = c(NA, NA, NA, 1), col =c("grey35", "blue", "black", "red"))
+
 dev.off()
 
 #plot histogram of bins

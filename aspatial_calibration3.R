@@ -1,12 +1,19 @@
-
+library(ggplot2)
 library(dplyr)
-#rf_nonspatial_alldata<- randomForest(Al_avail~ ruggedness + bedrockgeo + unit_size + NLDEM + climate_zones_RS + distOcean_RS + slope+ surficial_regional_RS, till_df, ntree=1000, mtry=4)
 
-p4<-predict(rf_nonspatial_alldata, till_df, predict.all=TRUE) 
-p4mean<- apply(p4$individual, MARGIN=1, mean, na.rm= TRUE)
-p4sd<- apply(p4$individual, MARGIN=1, sd, na.rm= TRUE)
-ind4<-data.frame(observed=till_df$Al_avail, predicted=p4, mean=p4mean, sd=p4sd)
-ind4$error<- (ind4$observed- ind4$predicted.aggregate)
+#predict all data
+p4<-predict(rf_nonspatial_alldata, till_df, predict.all=TRUE)
+p_oobs4 <- p4$individual
+
+
+#calculate the mean and sd using only the oobs.
+p4mean<- apply(p_oobs4, MARGIN=1, mean, na.rm= TRUE)
+p4sd<- apply(p_oobs4, MARGIN=1, sd, na.rm= TRUE)
+
+#Then calculate the error
+ind4<-data.frame(observed=till_df$Al_avail, predicted=p4mean, sd=p4sd) 
+ind4$error<- (ind4$observed- ind4$predicted)
+
 
 #add my calibrated values
 ind4<- ind4 %>% mutate(cal = (sd*a+b))
@@ -59,7 +66,7 @@ ind4<- ind4 %>%
   mutate(sd_bin = cut_number(ind4$sd, n = 15))
 #Obtain RMSE of the bin for uncalibrated values
 Stats6 <- ind4 %>% group_by(sd_bin) %>% 
-  summarize(mean_sd_group = mean(sd), RMS_group_UC = RMSE(observed, predicted.aggregate), NumFramesUC = n())
+  summarize(mean_sd_group = mean(sd), RMS_group_UC = RMSE(observed, predicted), NumFramesUC = n())
 
 # do the same thing for the calibrated values
 ind4<- ind4 %>% 
@@ -67,7 +74,7 @@ ind4<- ind4 %>%
   mutate(sdcal_bin = cut_number(ind4$cal, n = 15))
 #now obtain the RMSE of calibrated bins
 Stats7 <- ind4 %>% group_by(sdcal_bin) %>% 
-  summarize(mean_sd_group = mean(sd), mean_sdcal_group = mean(cal), RMS_group = RMSE(observed, predicted.aggregate), NumFramesC = n())
+  summarize(mean_sd_group = mean(sd), mean_sdcal_group = mean(cal), RMS_group = RMSE(observed, predicted), NumFramesC = n())
 
 
 #Identify bins with few values in them
@@ -84,7 +91,7 @@ ind4<- ind4 %>%
   mutate(sd_bin = cut_number(sd, 5000))
 #Obtain RMSE of the bin for uncalibrated values
 stats8 <- ind4 %>% group_by(sd_bin) %>% 
-  summarize(mean_sd_group = mean(sd), RMS_group_UC = RMSE(observed, predicted.aggregate), NumFramesUC = n())
+  summarize(mean_sd_group = mean(sd), RMS_group_UC = RMSE(observed, predicted), NumFramesUC = n())
 
 # do the same thing for the calibrated values
 ind4<- ind4 %>% 
@@ -92,7 +99,7 @@ ind4<- ind4 %>%
   mutate(sdcal_bin = cut_number(cal, 5000))
 #now obtain the RMSE of calibrated bins
 stats9 <- ind4 %>% group_by(sdcal_bin) %>% 
-  summarize(mean_sd_group = mean(sd), mean_sdcal_group = mean(cal), RMS_group = RMSE(observed, predicted.aggregate), NumFramesC = n())
+  summarize(mean_sd_group = mean(sd), mean_sdcal_group = mean(cal), RMS_group = RMSE(observed, predicted), NumFramesC = n())
 
 
 #now make a plot (RMSE residuals vs standard deviation of the bootstrapped estimates)
